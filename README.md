@@ -1,3 +1,3 @@
-Evosegment
+Evosector
 ===
-`Evosegment` is the simulation of cell evolution on a segmented map.
+`Evosector` is the simulation of cell evolution on a sector map.

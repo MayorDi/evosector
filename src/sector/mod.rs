@@ -1,11 +1,11 @@
-use crate::segment::solid::Solid;
-use crate::segment::water::Water;
+use crate::sector::solid::Solid;
+use crate::sector::water::Water;
 
 pub mod solid;
 pub mod water;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Segment {
+pub enum Sector {
     Solid(Solid),
     Water(Water)
 }
