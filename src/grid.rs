@@ -11,7 +11,7 @@ use sdl2::render::WindowCanvas;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Grid {
-    sectors: [Sector; SIZE_GRID.0 * SIZE_GRID.1],
+    pub sectors: [Sector; SIZE_GRID.0 * SIZE_GRID.1],
 }
 
 impl Grid {
@@ -36,6 +36,11 @@ impl Grid {
         for (idx, n) in noise.body().iter().enumerate() {
             if *n >= 2 {
                 grid.sectors[idx] = Sector::Solid(Solid::default());
+                if let Sector::Solid(solid) = &mut grid.sectors[idx] {
+                    solid.resource_coefficient = rand::thread_rng().gen_range(0.5..1.0);
+                } else if let Sector::Water(water) = &mut grid.sectors[idx] {
+                    water.resource_coefficient = rand::thread_rng().gen_range(0.5..1.0);
+                }
             }
         }
 

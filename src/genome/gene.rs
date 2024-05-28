@@ -9,4 +9,5 @@ pub enum Gene {
     VectorMove(Vector2<f32>),
     Attack(EnergyConsumptionCoefficient),
     ResourceExtraction(Resource),
+    Reproduction,
 }

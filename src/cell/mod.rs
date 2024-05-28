@@ -19,7 +19,7 @@ impl Cell {
         Self {
             energy: DEFAULT_ENERGY_CELL,
             position,
-            genome: Genome::new(),
+            genome: Genome::default(),
             protection_body: DEFAULT_PROTECTION_BODY_CELL,
         }
     }
