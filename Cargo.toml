@@ -14,3 +14,5 @@ readme = "README.md"
 rand = "0.8.5"
 nalgebra = "0.32.5"
 sdl2 = "0.36.0"
+
+gen-world = { path = "../gen-world/" }
