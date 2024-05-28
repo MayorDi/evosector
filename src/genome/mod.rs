@@ -15,7 +15,7 @@ impl Genome {
         Self {
             genes: [None; COUNT_GENES],
             step: 0,
-            protection: 1.0
+            protection: 1.0,
         }
     }
 }

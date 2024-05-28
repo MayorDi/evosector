@@ -7,5 +7,5 @@ pub mod water;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Sector {
     Solid(Solid),
-    Water(Water)
+    Water(Water),
 }

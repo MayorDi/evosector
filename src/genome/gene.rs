@@ -1,6 +1,6 @@
-use nalgebra::Vector2;
 use crate::alias::EnergyConsumptionCoefficient;
 use crate::resource::Resource;
+use nalgebra::Vector2;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Gene {

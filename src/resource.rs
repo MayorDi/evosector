@@ -2,5 +2,5 @@
 pub enum Resource {
     #[default]
     Photosynthesis,
-    Chemosynthesis
+    Chemosynthesis,
 }

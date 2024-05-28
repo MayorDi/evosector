@@ -1,6 +1,6 @@
-use nalgebra::Vector2;
 use crate::constants::{DEFAULT_ENERGY_CELL, DEFAULT_PROTECTION_BODY_CELL};
 use crate::genome::Genome;
+use nalgebra::Vector2;
 
 #[derive(Debug, Clone)]
 pub struct Cell {

@@ -1,9 +1,9 @@
-pub mod genome;
 pub mod alias;
-pub mod constants;
 pub mod cell;
-pub mod sector;
-pub mod resource;
+pub mod constants;
+pub mod genome;
 pub mod grid;
-pub mod traits;
 pub mod math;
+pub mod resource;
+pub mod sector;
+pub mod traits;
