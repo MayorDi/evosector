@@ -8,3 +8,7 @@ pub trait Render {
 pub trait Behavior {
     fn update(&mut self, index: usize) -> Vec<Event>;
 }
+
+pub trait Checkable {
+    fn is_viability(&self, index: usize) -> Result<(), Event>;
+}

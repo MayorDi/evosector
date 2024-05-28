@@ -5,7 +5,7 @@ use crate::event::Event;
 use crate::genome::gene::Gene;
 use crate::genome::Genome;
 use crate::resource::Resource;
-use crate::traits::{Behavior, Render};
+use crate::traits::{Behavior, Checkable, Render};
 use nalgebra::Vector2;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -51,15 +51,24 @@ impl Render for Cell {
     }
 }
 
+impl Checkable for Cell {
+    fn is_viability(&self, index: usize) -> Result<(), Event> {
+        if self.energy < 20.0 {
+            return Err(Event::new(move |cells, _| {
+                cells.remove(index);
+            }));
+        }
+        
+        Ok(())
+    }
+}
+
 impl Behavior for Cell {
     fn update(&mut self, index: usize) -> Vec<Event> {
         let mut events = Vec::new();
 
-        if self.energy < 20.0 {
-            events.push(Event::new(move |cells, _| {
-                cells.remove(index);
-            }));
-            return events;
+        if let Err(event) = self.is_viability(index) {
+            return vec![event];
         }
 
         if let Some(gene) = self.genome.genes[self.genome.step] {
@@ -81,11 +90,7 @@ impl Behavior for Cell {
             }
         }
 
-        if self.genome.step + 1 < COUNT_GENES {
-            self.genome.step += 1;
-        } else {
-            self.genome.step = 0;
-        }
+        self.genome.next_step();
 
         events
     }
