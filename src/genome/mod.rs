@@ -19,7 +19,7 @@ impl Genome {
             protection: 1.0,
         }
     }
-    
+
     pub fn next_step(&mut self) {
         if self.step + 1 < COUNT_GENES {
             self.step += 1;

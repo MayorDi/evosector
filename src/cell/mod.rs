@@ -1,6 +1,4 @@
-use crate::constants::{
-    COUNT_GENES, DEFAULT_ENERGY_CELL, DEFAULT_PROTECTION_BODY_CELL, SIZE_RENDER_SECTOR,
-};
+use crate::constants::{DEFAULT_ENERGY_CELL, DEFAULT_PROTECTION_BODY_CELL, SIZE_RENDER_SECTOR};
 use crate::event::Event;
 use crate::genome::gene::Gene;
 use crate::genome::Genome;
@@ -58,7 +56,7 @@ impl Checkable for Cell {
                 cells.remove(index);
             }));
         }
-        
+
         Ok(())
     }
 }
@@ -70,7 +68,7 @@ impl Behavior for Cell {
         }
 
         let mut events = Vec::new();
-        
+
         if let Some(gene) = self.genome.genes[self.genome.step] {
             match gene {
                 Gene::ProtectionMutate(_) => {}
