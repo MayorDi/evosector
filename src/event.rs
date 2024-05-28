@@ -1,7 +1,6 @@
 use crate::cell::Cell;
 use crate::grid::Grid;
 
-
 pub struct Event(pub Box<dyn Fn(&mut Vec<Cell>, &mut Grid)>);
 
 impl Event {

@@ -1,7 +1,7 @@
 extern crate sdl2;
 
 use evosector::cell::Cell;
-use evosector::event;
+use evosector::event::Event as EventMessage;
 use evosector::grid::Grid;
 use evosector::traits::{Behavior, Render};
 use nalgebra::Vector2;
@@ -9,7 +9,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use std::time::Duration;
-use evosector::event::Event as EventMessage;
 
 pub fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
@@ -26,13 +25,12 @@ pub fn main() -> Result<(), String> {
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     let mut event_pump = sdl_context.event_pump()?;
 
-    
     let mut grid = Grid::generate(1);
     let mut cells: Vec<Cell> = vec![Cell::new(Vector2::new(10.0, 10.0))];
 
     'running: loop {
         let mut events = Vec::new();
-        
+
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
@@ -43,7 +41,7 @@ pub fn main() -> Result<(), String> {
             events.append(&mut cells[idx].update(idx));
         }
 
-        event_handler(events, &mut cells, &mut  grid);
+        event_handler(events, &mut cells, &mut grid);
         canvas.present();
         for event in event_pump.poll_iter() {
             match event {
@@ -55,7 +53,7 @@ pub fn main() -> Result<(), String> {
                 _ => {}
             }
         }
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 
     Ok(())

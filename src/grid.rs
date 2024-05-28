@@ -60,10 +60,10 @@ impl Render for Grid {
             );
 
             match *sector {
-                Sector::Solid(solid) => {
+                Sector::Solid(_) => {
                     canvas.set_draw_color(Color::RGB(100, 100, 100));
                 }
-                Sector::Water(water) => {
+                Sector::Water(_) => {
                     canvas.set_draw_color(Color::RGB(50, 50, 150));
                 }
             }
