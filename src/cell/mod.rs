@@ -65,12 +65,12 @@ impl Checkable for Cell {
 
 impl Behavior for Cell {
     fn update(&mut self, index: usize) -> Vec<Event> {
-        let mut events = Vec::new();
-
         if let Err(event) = self.is_viability(index) {
             return vec![event];
         }
 
+        let mut events = Vec::new();
+        
         if let Some(gene) = self.genome.genes[self.genome.step] {
             match gene {
                 Gene::ProtectionMutate(_) => {}
