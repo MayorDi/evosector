@@ -1,5 +1,6 @@
 use nalgebra::Vector2;
 use crate::alias::EnergyConsumptionCoefficient;
+use crate::resource::Resource;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Gene {
@@ -8,10 +9,4 @@ pub enum Gene {
     VectorMove(Vector2<f32>),
     Attack(EnergyConsumptionCoefficient),
     ResourceExtraction(Resource),
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Resource {
-    Photosynthesis,
-    Chemosynthesis
 }
