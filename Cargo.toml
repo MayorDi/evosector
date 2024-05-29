@@ -1,6 +1,6 @@
 [package]
 name = "evosector"
-description = "Evosegment is a simulation of cell evolution on a sector map."
+description = "Evosector is a simulation of cell evolution on a sector map."
 version = "0.0.1"
 authors = ["Dmitriy Mayorov<MayorDi@yandex.ru>"]
 license = "GPL-3"
