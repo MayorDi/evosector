@@ -1,4 +1,6 @@
-use crate::constants::{DEFAULT_ENERGY_CELL, DEFAULT_PROTECTION_BODY_CELL, SIZE_RENDER_SECTOR};
+use crate::constants::{
+    DEFAULT_ENERGY_CELL, DEFAULT_PROTECTION_BODY_CELL, SIZE_GRID, SIZE_RENDER_SECTOR,
+};
 use crate::event::Event;
 use crate::genome::gene::Gene;
 use crate::genome::Genome;
@@ -14,7 +16,7 @@ pub struct Cell {
     energy: f32,
     position: Vector2<f32>,
     genome: Genome,
-    protection_body: f32,
+    _protection_body: f32,
 }
 
 impl Cell {
@@ -23,15 +25,21 @@ impl Cell {
             energy: DEFAULT_ENERGY_CELL,
             position,
             genome: Genome::default(),
-            protection_body: DEFAULT_PROTECTION_BODY_CELL,
+            _protection_body: DEFAULT_PROTECTION_BODY_CELL,
         }
     }
 
-    pub fn reproduction(&mut self) -> Self {
+    pub fn reproduction(&mut self) -> Result<Self, ()> {
+        if self.energy / 2.0 < 40.0 {
+            return Err(());
+        }
+
+        self.energy /= 2.0;
+
         let mut new_cell = self.clone();
         new_cell.genome.step = 0;
 
-        new_cell
+        Ok(new_cell)
     }
 }
 
@@ -69,22 +77,17 @@ impl Behavior for Cell {
 
         let mut events = Vec::new();
 
-        if let Some(gene) = self.genome.genes[self.genome.step] {
+        if let Some(gene) = self.genome.current_gene() {
             match gene {
                 Gene::ProtectionMutate(_) => {}
                 Gene::ProtectionBody(_) => {}
-                Gene::VectorMove(vector_move) => self.position += vector_move,
+                Gene::VectorMove(vector) => events.push(move_cell(vector, index)),
                 Gene::Attack(_) => {}
                 Gene::ResourceExtraction(resource) => match resource {
-                    Resource::Photosynthesis => {
-                        events.push(Event::new(|_, _| {}));
-                    }
+                    Resource::Photosynthesis => events.push(Event::new(|_, _| {})),
                     Resource::Chemosynthesis => {}
                 },
-                Gene::Reproduction => events.push(Event::new(move |cells, _| {
-                    let new_cell = cells[index].reproduction();
-                    cells.push(new_cell);
-                })),
+                Gene::Reproduction => events.push(reproduce_cell(index)),
             }
         }
 
@@ -92,4 +95,25 @@ impl Behavior for Cell {
 
         events
     }
+}
+
+fn move_cell(vector_move: Vector2<f32>, index: usize) -> Event {
+    Event::new(move |cells, _grid| {
+        if limit_move(cells[index].position) {
+            cells[index].position += vector_move;
+        }
+    })
+}
+
+fn reproduce_cell(index: usize) -> Event {
+    Event::new(move |cells, _| {
+        if let Ok(cell) = cells[index].reproduction() {
+            cells.push(cell);
+        }
+    })
+}
+
+fn limit_move(pos: Vector2<f32>) -> bool {
+    (pos.x as usize + 2) < SIZE_GRID.0 * SIZE_RENDER_SECTOR as usize
+        && (pos.y as usize + 2) < SIZE_GRID.1 * SIZE_RENDER_SECTOR as usize
 }

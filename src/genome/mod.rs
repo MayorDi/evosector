@@ -27,6 +27,10 @@ impl Genome {
             self.step = 0;
         }
     }
+
+    pub fn current_gene(&self) -> Option<Gene> {
+        self.genes[self.step]
+    }
 }
 
 impl Default for Genome {
