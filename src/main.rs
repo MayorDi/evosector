@@ -26,7 +26,7 @@ pub fn main() -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump()?;
 
     let mut grid = Grid::generate(1);
-    let mut cells: Vec<Cell> = vec![Cell::new(Vector2::new(10.0, 10.0))];
+    let mut cells: Vec<Cell> = vec![Cell::new(Vector2::new(250.0, 250.0))];
 
     'running: loop {
         let mut events = Vec::new();
@@ -37,8 +37,8 @@ pub fn main() -> Result<(), String> {
         grid.render(&mut canvas);
         cells.render(&mut canvas);
 
-        for idx in 0..cells.len() {
-            events.append(&mut cells[idx].update(idx));
+        for (idx, cell) in cells.iter_mut().enumerate() {
+            events.append(&mut cell.update(idx));
         }
 
         event_handler(events, &mut cells, &mut grid);
