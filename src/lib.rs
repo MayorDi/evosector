@@ -1,7 +1,6 @@
 pub mod alias;
 pub mod cell;
 pub mod constants;
-pub mod event;
 pub mod genome;
 pub mod grid;
 mod impls;
