@@ -10,7 +10,7 @@ impl Default for Solid {
     fn default() -> Self {
         Self {
             light_coefficient: 1.0,
-            move_coefficient: 0.6,
+            move_coefficient: 0.2,
             resource_coefficient: 0.0,
             count_cells: 0,
         }

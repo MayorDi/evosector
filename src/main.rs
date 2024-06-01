@@ -38,7 +38,7 @@ pub fn main() -> Result<(), String> {
         cells.render(&mut canvas);
 
         for (idx, cell) in cells.iter_mut().enumerate() {
-            events.append(&mut cell.update(idx));
+            // events.append(&mut cell.update(idx));
         }
 
         event_handler(events, &mut cells, &mut grid);

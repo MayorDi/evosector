@@ -47,17 +47,10 @@ impl CountCellsOnSector for Sector {
     }
 
     fn is_zero(&self) -> bool {
-        match self {
-            Sector::Solid(solid) => solid.count_cells == 0,
-            Sector::Water(water) => water.count_cells == 0,
-        }
+        self.get_count_cells() == 0
     }
 
     fn decrement_count_cells(&mut self) {
-        if self.is_zero() {
-            return;
-        }
-
         match self {
             Sector::Solid(solid) => solid.count_cells -= 1,
             Sector::Water(water) => water.count_cells -= 1,

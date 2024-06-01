@@ -73,7 +73,7 @@ impl Default for Genome {
                 Some(Gene::ResourceExtraction(Resource::Chemosynthesis)),
                 Some(Gene::Reproduction),
                 Some(Gene::VectorMove(Vector2::new(2.0, 2.0))),
-                Some(Gene::ResourceExtraction(Resource::Chemosynthesis)),
+                Some(Gene::ResourceExtraction(Resource::Photosynthesis)),
                 Some(Gene::VectorMove(Vector2::new(-2.0, 0.0))),
                 Some(Gene::ResourceExtraction(Resource::Chemosynthesis)),
                 Some(Gene::VectorMove(Vector2::new(-2.0, -2.0))),

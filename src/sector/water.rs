@@ -9,7 +9,7 @@ pub struct Water {
 impl Default for Water {
     fn default() -> Self {
         Self {
-            light_coefficient: 0.5,
+            light_coefficient: 0.1,
             move_coefficient: 1.0,
             resource_coefficient: 0.0,
             count_cells: 0,
