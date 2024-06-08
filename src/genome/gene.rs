@@ -17,7 +17,7 @@ impl From<usize> for Gene {
             0 => Gene::Reproduction,
             1 => Gene::Move(Vector2::default()),
             2 => Gene::If(Condition::default()),
-            _ => panic!("From<u8> for Gene => {}", value)
+            _ => panic!("From<u8> for Gene => {}", value),
         }
     }
 }
@@ -51,7 +51,8 @@ impl Mutable for Gene {
                 )
             }
             Self::If(condition) => {
-                *condition = Condition::from(rand::thread_rng().gen_range(0..Condition::VARIANT_COUNT));
+                *condition =
+                    Condition::from(rand::thread_rng().gen_range(0..Condition::VARIANT_COUNT));
             }
             _ => {}
         }

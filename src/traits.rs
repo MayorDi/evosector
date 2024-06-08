@@ -11,5 +11,3 @@ pub trait Behavior {
 pub trait Mutable {
     fn mutate(&mut self) -> bool;
 }
-
-

@@ -43,12 +43,14 @@ impl Mutable for Genome {
                 match gene {
                     Some(gene) => gene.mutate(),
                     None => {
-                        *gene = Some(Gene::from(rand::thread_rng().gen_range(0..Gene::VARIANT_COUNT)));
+                        *gene = Some(Gene::from(
+                            rand::thread_rng().gen_range(0..Gene::VARIANT_COUNT),
+                        ));
                         gene.unwrap().mutate()
                     }
                 };
             }
-            
+
             return true;
         }
 
@@ -59,7 +61,6 @@ impl Mutable for Genome {
 impl Default for Genome {
     fn default() -> Self {
         let mut genome = Genome::new();
-        
 
         todo!()
     }
