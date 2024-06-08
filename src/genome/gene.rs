@@ -1,9 +1,9 @@
 use nalgebra::Vector2;
 use rand::Rng;
 
-use crate::{constants::PROBABILITY_OF_MUTATION, traits::Mutable};
+use crate::traits::Mutable;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, variant_count::VariantCount)]
 pub enum Gene {
     Reproduction,
     Move(Vector2<f32>),
@@ -11,8 +11,8 @@ pub enum Gene {
     EndIf,
 }
 
-impl From<u8> for Gene {
-    fn from(value: u8) -> Self {
+impl From<usize> for Gene {
+    fn from(value: usize) -> Self {
         match value {
             0 => Gene::Reproduction,
             1 => Gene::Move(Vector2::default()),
@@ -22,7 +22,7 @@ impl From<u8> for Gene {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, variant_count::VariantCount)]
 pub enum Condition {
     IsLight,
     #[default]
@@ -30,8 +30,8 @@ pub enum Condition {
     IsSolid,
 }
 
-impl From<u8> for Condition {
-    fn from(value: u8) -> Self {
+impl From<usize> for Condition {
+    fn from(value: usize) -> Self {
         match value {
             0 => Condition::IsLight,
             1 => Condition::IsSolid,
@@ -51,7 +51,7 @@ impl Mutable for Gene {
                 )
             }
             Self::If(condition) => {
-                *condition = Condition::from(rand::thread_rng().gen_range(0..3));
+                *condition = Condition::from(rand::thread_rng().gen_range(0..Condition::VARIANT_COUNT));
             }
             _ => {}
         }
