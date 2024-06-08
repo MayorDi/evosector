@@ -1,6 +1,8 @@
 use std::ops::{Index, IndexMut};
 
-use crate::constants::COUNT_GENES;
+use rand::Rng;
+
+use crate::constants::{COUNT_GENES, PROBABILITY_OF_MUTATION};
 use crate::genome::gene::Gene;
 use crate::traits::Mutable;
 
@@ -36,7 +38,21 @@ impl IndexMut<usize> for Genome {
 
 impl Mutable for Genome {
     fn mutate(&mut self) -> bool {
-        todo!()
+        if rand::thread_rng().gen_range(0.0..1.0) < PROBABILITY_OF_MUTATION {
+            for gene in self.genes.iter_mut() {
+                match gene {
+                    Some(gene) => gene.mutate(),
+                    None => {
+                        *gene = Some(Gene::from(rand::thread_rng().gen_range(0..3)));
+                        gene.unwrap().mutate()
+                    }
+                };
+            }
+            
+            return true;
+        }
+
+        false
     }
 }
 

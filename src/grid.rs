@@ -5,8 +5,7 @@ use crate::math::get_position;
 use crate::sector::Sector;
 use crate::traits::Render;
 use noise::{utils::*, *};
-use sdl2::render::{Canvas,  WindowCanvas};
-use sdl2::video::Window;
+use sdl2::render::WindowCanvas;
 
 #[derive(Debug, Clone)]
 pub struct Grid {

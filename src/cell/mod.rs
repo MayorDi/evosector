@@ -1,5 +1,5 @@
 use crate::constants::{
-    DEFAULT_ENERGY_CELL, SIZE_RENDER_SECTOR,
+    DEFAULT_ENERGY_CELL, SIZE_RENDER_SECTOR
 };
 use crate::genome::Genome;
 use crate::traits::{
@@ -41,8 +41,8 @@ impl Render for Cell {
         canvas.set_draw_color(self.color);
 
         let rect = Rect::new(
-            self.position.x as i32,
-            self.position.y as i32,
+            self.position.x as i32 * SIZE_RENDER_SECTOR as i32,
+            self.position.y as i32 * SIZE_RENDER_SECTOR as i32,
             SIZE_RENDER_SECTOR / 2,
             SIZE_RENDER_SECTOR / 2,
         );
@@ -52,6 +52,6 @@ impl Render for Cell {
 
 impl Mutable for Cell {
     fn mutate(&mut self) -> bool {
-        todo!()
+        self.genome.mutate()
     }
 }
