@@ -5,6 +5,5 @@ pub mod genome;
 pub mod grid;
 mod impls;
 pub mod math;
-pub mod resource;
 pub mod sector;
 pub mod traits;

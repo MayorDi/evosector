@@ -1,11 +1,7 @@
-use crate::sector::solid::Solid;
-use crate::sector::water::Water;
-
-pub mod solid;
-pub mod water;
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Sector {
-    Solid(Solid),
-    Water(Water),
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Sector {
+    /// `altitude >= 0` solid \
+    /// `altitude < 0` water
+    pub altitude: f64,
+    pub count_of_cells: usize,
 }

@@ -1,74 +1,61 @@
-use crate::constants::{SIZE_GRID, SIZE_RENDER_SECTOR};
-use crate::sector::solid::Solid;
+use std::path::Path;
+
+use crate::constants::SIZE_GRID;
+use crate::math::get_position;
 use crate::sector::Sector;
 use crate::traits::Render;
-use gen_world::noise::Noise;
-use gen_world::traits::{GenerateNoise, NoiseBody};
-use rand::Rng;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-use sdl2::render::WindowCanvas;
+use noise::{utils::*, *};
+use sdl2::render::{Canvas,  WindowCanvas};
+use sdl2::video::Window;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Grid {
-    pub sectors: [Sector; SIZE_GRID.0 * SIZE_GRID.1],
+    pub sectors: Vec<Sector>,
 }
 
 impl Grid {
-    // It needs to be redone.
-    pub fn generate(seed: u64) -> Self {
-        let mut noise: Noise<u8> = Noise::new(seed, SIZE_GRID.0, SIZE_GRID.1, 0..55).gen(|noise| {
-            for x in noise.body().iter_mut() {
-                if rand::thread_rng().gen_range(0.0..1.0) < 0.1 {
-                    *x = rand::thread_rng().gen_range(0..55);
-                }
-            }
-        });
-        for _ in 0..5 {
-            noise.smooth();
-        }
+    pub fn generate_noisemap(seed: u32) -> NoiseMap {
+        let billow = Billow::<Perlin>::default()
+            .set_seed(seed)
+            .set_frequency(1.67456);
 
-        let mut grid = Grid {
-            sectors: [Sector::Water(crate::sector::water::Water::default());
-                SIZE_GRID.0 * SIZE_GRID.1],
+        let noisemap = PlaneMapBuilder::new(billow)
+            .set_size(SIZE_GRID.0, SIZE_GRID.1)
+            .set_x_bounds(0.0, 0.5)
+            .set_y_bounds(0.0, 0.5)
+            .build();
+
+        noisemap
+    }
+
+    pub fn generate(seed: u32) -> Self {
+        let noisemap = Self::generate_noisemap(seed);
+
+        let mut grid = Self {
+            sectors: vec![Sector::default(); SIZE_GRID.2],
         };
 
-        for (idx, n) in noise.body().iter().enumerate() {
-            if *n >= 2 {
-                grid.sectors[idx] = Sector::Solid(Solid::default());
-                if let Sector::Solid(solid) = &mut grid.sectors[idx] {
-                    solid.resource_coefficient = rand::thread_rng().gen_range(0.5..1.0);
-                } else if let Sector::Water(water) = &mut grid.sectors[idx] {
-                    water.resource_coefficient = rand::thread_rng().gen_range(0.5..1.0);
-                }
-            }
+        for (index, sector) in grid.sectors.iter_mut().enumerate() {
+            let pos = get_position(index, SIZE_GRID.0);
+            sector.altitude = noisemap.get_value(pos.x as usize, pos.y as usize);
         }
 
         grid
     }
 }
 
+use noise::utils::{NoiseImage, NoiseMap};
+pub fn write_image_to_file(image: &NoiseImage, filename: &str) {
+    use std::fs;
+
+    let target = Path::new("./assets/textures").join(Path::new(filename));
+
+    fs::create_dir_all(target.clone().parent().expect("No parent directory found."))
+        .expect("Failed to create directories.");
+
+    image.write_to_file(&target)
+}
+
 impl Render for Grid {
-    fn render(&self, canvas: &mut WindowCanvas) {
-        for (idx, sector) in self.sectors.iter().enumerate() {
-            let pos = crate::math::get_position(idx, SIZE_GRID.0);
-            let rect = Rect::new(
-                pos.x as i32 * SIZE_RENDER_SECTOR as i32,
-                pos.y as i32 * SIZE_RENDER_SECTOR as i32,
-                SIZE_RENDER_SECTOR,
-                SIZE_RENDER_SECTOR,
-            );
-
-            match *sector {
-                Sector::Solid(_) => {
-                    canvas.set_draw_color(Color::RGB(100, 100, 100));
-                }
-                Sector::Water(_) => {
-                    canvas.set_draw_color(Color::RGB(50, 50, 150));
-                }
-            }
-
-            canvas.fill_rect(rect).unwrap();
-        }
-    }
+    fn render(&self, _canvas: &mut WindowCanvas) {}
 }
