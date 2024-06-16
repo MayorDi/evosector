@@ -62,6 +62,6 @@ impl Default for Genome {
     fn default() -> Self {
         let mut genome = Genome::new();
 
-        todo!()
+        genome
     }
 }

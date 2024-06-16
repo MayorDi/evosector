@@ -4,12 +4,15 @@ use evosector::cell::Cell;
 use evosector::constants::{SIZE_GRID, SIZE_RENDER_SECTOR};
 use evosector::grid::Grid;
 use evosector::traits::{Behavior, Render};
+use nalgebra::Vector2;
 use noise::utils::{ColorGradient, ImageRenderer};
 use sdl2::event::Event;
 use sdl2::image::{InitFlag, LoadTexture};
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 pub fn main() -> Result<(), String> {
@@ -43,7 +46,7 @@ pub fn main() -> Result<(), String> {
         .load_texture("./assets/textures/texture_grid.png")
         .unwrap();
 
-    // let mut cells: Vec<Cell> = vec![Cell::new(Vector2::new(250.0, 250.0))];
+    let cells = Rc::new(RefCell::new(vec![Cell::new(Vector2::new(250.0, 250.0))]));
 
     'running: loop {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -60,7 +63,7 @@ pub fn main() -> Result<(), String> {
             canvas.copy(&texture_grid, None, Some(rect)).unwrap();
         }
 
-        // cells.render(&mut canvas);
+        cells.render(&mut canvas);
 
         canvas.present();
         for event in event_pump.poll_iter() {
