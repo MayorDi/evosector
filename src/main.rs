@@ -28,7 +28,6 @@ fn main() {
     while !window.should_close() {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-            
         }
 
         let ui = imgui_glfw.frame(&mut window, &mut imgui);
