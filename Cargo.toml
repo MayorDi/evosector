@@ -13,6 +13,10 @@ readme = "README.md"
 [dependencies]
 rand = "0.8.5"
 nalgebra = "0.32.5"
-sdl2 = { version = "0.36.0", features = ["image"]}
 noise = { version = "0.9.0", features = ["images"]}
 variant_count = "1.1.0"
+glfw = "*"
+imgui-glfw-rs = "*"
+imgui = "0.12.0"
+gl = "*"
+image = { version = "*", features = ["png"] }

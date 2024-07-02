@@ -5,7 +5,6 @@ use crate::math::get_position;
 use crate::sector::Sector;
 use crate::traits::Render;
 use noise::{utils::*, *};
-use sdl2::render::WindowCanvas;
 
 #[derive(Debug, Clone)]
 pub struct Grid {
@@ -56,5 +55,5 @@ pub fn write_image_to_file(image: &NoiseImage, filename: &str) {
 }
 
 impl Render for Grid {
-    fn render(&self, _canvas: &mut WindowCanvas) {}
+    fn render(&self) {}
 }

@@ -2,16 +2,13 @@ use crate::constants::{DEFAULT_ENERGY_CELL, SIZE_RENDER_SECTOR};
 use crate::genome::Genome;
 use crate::traits::{Mutable, Render};
 use nalgebra::Vector2;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-use sdl2::render::WindowCanvas;
 
 #[derive(Debug, Clone)]
 pub struct Cell {
     energy: f32,
     position: Vector2<f32>,
     genome: Genome,
-    color: Color,
+    // color: Color,
     lifetime: usize,
 }
 
@@ -22,7 +19,7 @@ impl Cell {
             position,
             genome: Genome::default(),
             lifetime: 0,
-            color: Color::RGB(255, 255, 255),
+            // color: Color::RGB(255, 255, 255),
         }
     }
 
@@ -32,16 +29,17 @@ impl Cell {
 }
 
 impl Render for Cell {
-    fn render(&self, canvas: &mut WindowCanvas) {
-        canvas.set_draw_color(self.color);
+    fn render(&self) {
+        todo!()
+        // canvas.set_draw_color(self.color);
 
-        let rect = Rect::new(
-            self.position.x as i32,
-            self.position.y as i32,
-            SIZE_RENDER_SECTOR / 2,
-            SIZE_RENDER_SECTOR / 2,
-        );
-        canvas.fill_rect(rect).unwrap();
+        // let rect = Rect::new(
+        //     self.position.x as i32,
+        //     self.position.y as i32,
+        //     SIZE_RENDER_SECTOR / 2,
+        //     SIZE_RENDER_SECTOR / 2,
+        // );
+        // canvas.fill_rect(rect).unwrap();
     }
 }
 
