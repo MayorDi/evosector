@@ -8,3 +8,5 @@ pub mod math;
 pub mod sector;
 pub mod traits;
 pub mod opengl;
+pub mod camera;
+pub mod mouse;

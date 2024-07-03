@@ -60,7 +60,7 @@ impl Mutable for Genome {
 
 impl Default for Genome {
     fn default() -> Self {
-        let mut genome = Genome::new();
+        let genome = Genome::new();
 
         genome
     }

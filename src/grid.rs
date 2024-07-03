@@ -3,11 +3,12 @@ use std::path::Path;
 use crate::constants::SIZE_GRID;
 use crate::math::get_position;
 use crate::sector::Sector;
-use crate::traits::Render;
 use noise::{utils::*, *};
 
 #[derive(Debug, Clone)]
 pub struct Grid {
+    pub width: usize,
+    pub height: usize,
     pub sectors: Vec<Sector>,
 }
 
@@ -23,6 +24,13 @@ impl Grid {
             .set_y_bounds(0.0, 0.5)
             .build();
 
+        write_image_to_file(
+            &ImageRenderer::new()
+                .set_gradient(ColorGradient::new().build_terrain_gradient())
+                .render(&noisemap),
+            "texture_grid.png"
+        );
+
         noisemap
     }
 
@@ -31,13 +39,15 @@ impl Grid {
 
         let mut grid = Self {
             sectors: vec![Sector::default(); SIZE_GRID.2],
+            width: SIZE_GRID.0,
+            height: SIZE_GRID.1,
         };
 
         for (index, sector) in grid.sectors.iter_mut().enumerate() {
             let pos = get_position(index, SIZE_GRID.0);
             sector.altitude = noisemap.get_value(pos.x as usize, pos.y as usize);
         }
-
+        
         grid
     }
 }
@@ -52,8 +62,4 @@ pub fn write_image_to_file(image: &NoiseImage, filename: &str) {
         .expect("Failed to create directories.");
 
     image.write_to_file(&target)
-}
-
-impl Render for Grid {
-    fn render(&self) {}
 }
