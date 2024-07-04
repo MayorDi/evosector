@@ -68,7 +68,7 @@ fn main() {
                 }
 
                 glfw::WindowEvent::Scroll(_, y) => {
-                    if (camera.scale + y as f32) >= 0.0 {
+                    if (camera.scale + y as f32) > 0.0 {
                         camera.scale += y as f32;
                     }
                 }
