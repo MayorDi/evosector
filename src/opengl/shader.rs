@@ -89,7 +89,7 @@ impl<Src: BufRead> Build for Shader<Src> {
                         .ok()
                         .expect("ShaderInfoLog not valid utf8")
                 );
-                
+
                 self.status = StatusShader::ErrorCompile(err.clone());
                 return Err(err);
             }

@@ -1,16 +1,10 @@
-use std::ffi::CString;
-use std::io::BufReader;
 use std::mem::size_of;
 
 use evosector::camera::Camera;
 use evosector::constants::SIZE_GRID;
 use evosector::grid::Grid;
 use evosector::mouse::Mouse;
-use evosector::opengl::prelude::Build;
-use evosector::opengl::prelude::Delete;
-use evosector::opengl::prelude::GetId;
-use evosector::opengl::prelude::Program;
-use evosector::opengl::prelude::Shader;
+use evosector::opengl::prelude::*;
 use glfw::Action;
 use glfw::Context;
 use glfw::Key;
@@ -39,7 +33,7 @@ fn main() {
     let mut camera = Camera::new();
     let mut mouse = Mouse::new();
     let mut time: u32 = 0;
-    let grid = Grid::generate(0);
+    let _grid = Grid::generate(0);
 
     let (vao_grid, texture_grid) = generate_tools_render_grid();
 
@@ -55,33 +49,6 @@ fn main() {
     program_grid.push_shader(fs_grid);
     program_grid.build().unwrap();
     // END SHADERS PROGRAMS;
-
-    // UNIFORMS:
-    let resolution_location_grid = unsafe {
-        gl::GetUniformLocation(
-            program_grid.id(),
-            CString::new("resolution").unwrap().as_ptr(),
-        )
-    };
-    let position_camera_location = unsafe {
-        gl::GetUniformLocation(
-            program_grid.id(),
-            CString::new("camera_pos").unwrap().as_ptr(),
-        )
-    };
-    let scale_camera_location = unsafe {
-        gl::GetUniformLocation(
-            program_grid.id(),
-            CString::new("camera_scale").unwrap().as_ptr(),
-        )
-    };
-    let time_location = unsafe {
-        gl::GetUniformLocation(
-            program_grid.id(),
-            CString::new("Time").unwrap().as_ptr(),
-        )
-    };
-    // END UNIFORMS;
 
     while !window.should_close() {
         glfw.poll_events();
@@ -126,18 +93,18 @@ fn main() {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             gl::Uniform3f(
-                resolution_location_grid,
+                get_location(&program_grid, "resolution"),
                 window.get_size().0 as f32,
                 window.get_size().1 as f32,
                 0.0,
             );
             gl::Uniform2f(
-                position_camera_location,
+                get_location(&program_grid, "camera_pos"),
                 camera.position.x,
                 camera.position.y,
             );
-            gl::Uniform1f(scale_camera_location, camera.scale);
-            gl::Uniform1ui(time_location, time);
+            gl::Uniform1f(get_location(&program_grid, "camera_scale"), camera.scale);
+            gl::Uniform1ui(get_location(&program_grid, "Time"), time);
 
             gl::BindTexture(gl::TEXTURE_2D, texture_grid);
             gl::UseProgram(program_grid.id());

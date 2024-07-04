@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use gl::types::{GLchar, GLint};
 
 use crate::opengl::prelude::StatusShader;
@@ -53,17 +55,17 @@ where
 
         unsafe {
             gl::LinkProgram(id);
-            
+
             let mut status = gl::FALSE as GLint;
             gl::GetProgramiv(id, gl::LINK_STATUS, &mut status);
-            
+
             if status != (gl::TRUE as GLint) {
                 let mut len: GLint = 0;
                 gl::GetProgramiv(id, gl::INFO_LOG_LENGTH, &mut len);
 
                 let mut buf = Vec::with_capacity(len as usize);
                 buf.set_len((len as usize) - 1);
-                
+
                 gl::GetProgramInfoLog(
                     id,
                     len,
@@ -99,7 +101,6 @@ where
     }
 }
 
-
 impl<S> Delete for Program<S>
 where
     S: Build + GetId + Status<Output = StatusShader> + Delete,
@@ -110,8 +111,12 @@ where
             for shader in self.shaders {
                 shader.delete();
             }
-            
+
             gl::DeleteProgram(id);
         }
     }
+}
+
+pub fn get_location<T: GetId>(program: &T, name: &str) -> i32 {
+    unsafe { gl::GetUniformLocation(program.id(), CString::new(name).unwrap().as_ptr()) }
 }

@@ -1,12 +1,12 @@
 pub mod alias;
+pub mod camera;
 pub mod cell;
 pub mod constants;
 pub mod genome;
 pub mod grid;
 mod impls;
 pub mod math;
+pub mod mouse;
+pub mod opengl;
 pub mod sector;
 pub mod traits;
-pub mod opengl;
-pub mod camera;
-pub mod mouse;

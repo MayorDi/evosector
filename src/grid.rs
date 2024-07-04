@@ -28,7 +28,7 @@ impl Grid {
             &ImageRenderer::new()
                 .set_gradient(ColorGradient::new().build_terrain_gradient())
                 .render(&noisemap),
-            "texture_grid.png"
+            "texture_grid.png",
         );
 
         noisemap
@@ -47,7 +47,7 @@ impl Grid {
             let pos = get_position(index, SIZE_GRID.0);
             sector.altitude = noisemap.get_value(pos.x as usize, pos.y as usize);
         }
-        
+
         grid
     }
 }
