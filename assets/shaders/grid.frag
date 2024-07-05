@@ -8,13 +8,14 @@ uniform sampler2D texture0;
 uniform uint Time;
 
 float rand(vec3 co) {
-    return fract(sin(dot(co, vec3(12.9898, 78.233, 34.0234))) * 437.5453);
+    return mix(0.5, 1.0, cos(dot(co, vec3(100.0, 120.0, 40.0))));
 }
 
 void main(void) {
     vec3 uv = gl_FragCoord.xyz / resolution.xyz;
+    float time = Time / 100.0;
 
-    float k = cos(TexPosition.x * 10.0 + Time / 100.0);
+    float k = cos(TexPosition.x * 10.0 + time);
     vec3 l = vec3(mix(0.6, 1.0, k));
     vec4 light = vec4(l, 1.0);
 
@@ -25,10 +26,9 @@ void main(void) {
 
     float water = 1.0;
     if (proc_blue > 0.60) {
-        float time = Time / 50000000.;
-        vec2 uv = (gl_FragCoord.xy / resolution.xy);
-        float rand_num = rand(texture_land.rgb + time);
-        water = mix(0.8, 1.0, sin(rand_num));
+        float t = time/100.0;
+        float rand_num = rand(texture_land.rgb + t);
+        water = mix(0.9, 1.0, rand_num);
     }
 
     color = texture_land * water * light;
