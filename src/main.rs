@@ -1,10 +1,12 @@
 use std::mem::size_of;
 
 use evosector::camera::Camera;
+use evosector::cell::Cell;
 use evosector::constants::SIZE_GRID;
 use evosector::grid::Grid;
 use evosector::mouse::Mouse;
 use evosector::opengl::prelude::*;
+use evosector::traits::Render;
 use glfw::Action;
 use glfw::Context;
 use glfw::Key;
@@ -34,8 +36,35 @@ fn main() {
     let mut mouse = Mouse::new();
     let mut time: u32 = 0;
     let _grid = Grid::generate(0);
+    let mut cells = vec![Cell::new(Vector2::new(0.0, 0.0))];
 
     let (vao_grid, texture_grid) = generate_tools_render_grid();
+    let mut vao_cells = 0;
+    let mut vbo_cells = 0;
+    unsafe {
+        gl::GenVertexArrays(1, &mut vao_cells);
+        gl::GenBuffers(1, &mut vbo_cells);
+
+        gl::BindVertexArray(vao_cells);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo_cells);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (6 * 3 * std::mem::size_of::<f32>()) as isize,
+            std::ptr::null(),
+            gl::DYNAMIC_DRAW,
+        );
+        gl::VertexAttribPointer(
+            0,
+            3,
+            gl::FLOAT,
+            gl::FALSE,
+            0,
+            std::ptr::null(),
+        );
+        gl::EnableVertexAttribArray(0);
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+        gl::BindVertexArray(0);
+    }
 
     //SHADERS PROGRAMS:
     //SHADER PROGRAM FOR GRID:
@@ -48,6 +77,17 @@ fn main() {
     program_grid.push_shader(vs_grid);
     program_grid.push_shader(fs_grid);
     program_grid.build().unwrap();
+
+    // SHADER PROGRAM FOR CELLS:
+    let shader_v_cells = std::fs::read("./assets/shaders/cell.vert").unwrap();
+    let shader_f_cells = std::fs::read("./assets/shaders/cell.frag").unwrap();
+
+    let vs_cells = Shader::new(gl::VERTEX_SHADER, &shader_v_cells[..]);
+    let fs_cells = Shader::new(gl::FRAGMENT_SHADER, &shader_f_cells[..]);
+    let mut program_cells = Program::new();
+    program_cells.push_shader(vs_cells);
+    program_cells.push_shader(fs_cells);
+    program_cells.build().unwrap();
     // END SHADERS PROGRAMS;
 
     while !window.should_close() {
@@ -92,6 +132,10 @@ fn main() {
             gl::ClearColor(0.2, 0.2, 0.2, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
+            // REBDER GRID
+            gl::BindTexture(gl::TEXTURE_2D, texture_grid);
+
+            gl::UseProgram(program_grid.id());
             gl::Uniform3f(
                 get_location(&program_grid, "resolution"),
                 window.get_size().0 as f32,
@@ -104,14 +148,34 @@ fn main() {
                 camera.position.y,
             );
             gl::Uniform1f(get_location(&program_grid, "camera_scale"), camera.scale);
+
             gl::Uniform1ui(get_location(&program_grid, "Time"), time);
-
-            gl::BindTexture(gl::TEXTURE_2D, texture_grid);
-            gl::UseProgram(program_grid.id());
-
             gl::BindVertexArray(vao_grid);
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
             gl::BindVertexArray(0);
+
+            // RENDER CELLS
+            gl::UseProgram(program_cells.id());
+            gl::Uniform3f(
+                get_location(&program_cells, "resolution"),
+                window.get_size().0 as f32,
+                window.get_size().1 as f32,
+                0.0,
+            );
+            gl::Uniform2f(
+                get_location(&program_cells, "camera_pos"),
+                camera.position.x,
+                camera.position.y,
+            );
+            gl::Uniform1f(get_location(&program_grid, "camera_scale"), camera.scale);
+            gl::BindVertexArray(vao_cells);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_cells);
+            for cell in cells.iter() {
+                cell.render();
+            }
+            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+            gl::BindVertexArray(0);
+            gl::UseProgram(0);
         }
 
         window.swap_buffers();

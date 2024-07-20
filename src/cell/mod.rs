@@ -1,4 +1,4 @@
-use crate::constants::{DEFAULT_ENERGY_CELL, SIZE_RENDER_SECTOR};
+use crate::constants::{DEFAULT_ENERGY_CELL, SIZE_RENDER_CELL};
 use crate::genome::Genome;
 use crate::traits::{Mutable, Render};
 use nalgebra::Vector2;
@@ -30,16 +30,37 @@ impl Cell {
 
 impl Render for Cell {
     fn render(&self) {
-        todo!()
-        // canvas.set_draw_color(self.color);
+        let vert_data = [
+            self.position.x - SIZE_RENDER_CELL,
+            self.position.y - SIZE_RENDER_CELL,
+            0.0,
+            self.position.x + SIZE_RENDER_CELL,
+            self.position.y - SIZE_RENDER_CELL,
+            0.0,
+            self.position.x - SIZE_RENDER_CELL,
+            self.position.y + SIZE_RENDER_CELL,
+            0.0,
+            self.position.x - SIZE_RENDER_CELL,
+            self.position.y + SIZE_RENDER_CELL,
+            0.0,
+            self.position.x + SIZE_RENDER_CELL,
+            self.position.y + SIZE_RENDER_CELL,
+            0.0,
+            self.position.x + SIZE_RENDER_CELL,
+            self.position.y - SIZE_RENDER_CELL,
+            0.0,
+        ];
 
-        // let rect = Rect::new(
-        //     self.position.x as i32,
-        //     self.position.y as i32,
-        //     SIZE_RENDER_SECTOR / 2,
-        //     SIZE_RENDER_SECTOR / 2,
-        // );
-        // canvas.fill_rect(rect).unwrap();
+        unsafe {
+            gl::BufferSubData(
+                gl::ARRAY_BUFFER,
+                0,
+                (vert_data.len() * std::mem::size_of::<f32>()) as isize,
+                vert_data.as_ptr() as *const _,
+            );
+
+            gl::DrawArrays(gl::TRIANGLES, 0, 6);
+        }
     }
 }
 
