@@ -6,7 +6,7 @@ pub trait Render {
 
 pub trait Behavior {
     type GlobalImpact;
-    fn update(&mut self, grid: &Grid) -> Option<Self::GlobalImpact>;
+    fn update(&mut self, grid: &mut Grid) -> Option<Self::GlobalImpact>;
 }
 
 pub trait Mutable {

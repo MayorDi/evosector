@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::constants::{DEFAULT_ENERGY_CELL, SIZE_GRID, SIZE_RENDER_CELL};
 use crate::genome::gene::Gene;
 use crate::genome::Genome;
@@ -13,6 +15,8 @@ pub struct Cell {
     genome: Genome,
     // color: Color,
     lifetime: usize,
+    pub idx_sector: usize,
+    pub is_alive: bool,
 }
 
 impl Cell {
@@ -22,15 +26,24 @@ impl Cell {
             position,
             genome: Genome::default(),
             lifetime: 0,
+            idx_sector: 0,
+            is_alive: true,
             // color: Color::RGB(255, 255, 255),
         }
     }
 
-    pub fn reproduction(&mut self) -> Result<Self, ()> {
-        let mut new_cell = self.clone();
-        new_cell.genome.step = 0;
+    pub fn reproduction(&mut self) -> Option<Self> {
+        if self.energy >= 60.0 {
+            self.energy /= 2.0;
+            self.lifetime = 0;
 
-        Ok(new_cell)
+            let mut new_cell = self.clone();
+            new_cell.genome.step = 0;
+
+            return Some(new_cell);
+        }
+
+        None
     }
 }
 
@@ -72,22 +85,49 @@ impl Render for Cell {
 
 impl Behavior for Cell {
     type GlobalImpact = Gene;
-    fn update(&mut self, grid: &Grid) -> Option<Self::GlobalImpact> {
+    fn update(&mut self, grid: &mut Grid) -> Option<Self::GlobalImpact> {
+        let mut ret_gene = None;
+
+        if !self.is_alive {
+            return ret_gene;
+        }
+
+        let mut sector = &mut grid.sectors[self.idx_sector];
+
         if let Some(gene) = self.genome[self.genome.step] {
             match gene {
                 Gene::Move(move_to) => {
                     if limit_move(self.position, move_to) {
-                        let k = grid.sectors[get_index(self.position, SIZE_GRID.0)];
-                        self.position += move_to * (1.0 - k.altitude);
+                        self.energy -= move_to.len() as f32 / 2.0;
+                        self.position += move_to * (1.0 - sector.altitude);
+                        let new_idx_sector = get_index(self.position, SIZE_GRID.0);
+
+                        if new_idx_sector != self.idx_sector {
+                            sector.count_of_cells -= 1.0;
+
+                            self.idx_sector = new_idx_sector;
+                            sector = &mut grid.sectors[self.idx_sector];
+                            sector.count_of_cells += 1.0;
+                        }
                     }
                 }
+
+                Gene::Reproduction => ret_gene = Some(Gene::Reproduction),
 
                 _ => {}
             }
         }
 
+        self.energy += 15.0 / (sector.count_of_cells * 2.0);
+        self.lifetime += 1;
+
+        if self.lifetime >= 72 {
+            self.is_alive = false;
+            sector.count_of_cells -= 1.0;
+        }
+
         self.genome.next_step();
-        None
+        ret_gene
     }
 }
 
@@ -100,8 +140,8 @@ impl Mutable for Cell {
 fn limit_move(move_from: Vector2<f32>, move_to: Vector2<f32>) -> bool {
     let new_pos = move_from + move_to;
 
-    new_pos.x >= 0.0
-        && new_pos.y >= 0.0
-        && new_pos.x <= (SIZE_GRID.0 as f32)
-        && new_pos.y <= (SIZE_GRID.1 as f32)
+    new_pos.x >= 0.5
+        && new_pos.y >= 0.5
+        && new_pos.x <= (SIZE_GRID.0 as f32 - 0.5)
+        && new_pos.y <= (SIZE_GRID.1 as f32 - 0.5)
 }

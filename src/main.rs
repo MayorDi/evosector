@@ -1,8 +1,10 @@
+use std::collections::LinkedList;
 use std::mem::size_of;
 
 use evosector::camera::Camera;
 use evosector::cell::Cell;
 use evosector::constants::SIZE_GRID;
+use evosector::genome::gene::Gene;
 use evosector::grid::Grid;
 use evosector::mouse::Mouse;
 use evosector::opengl::prelude::*;
@@ -36,8 +38,10 @@ fn main() {
     let mut camera = Camera::new();
     let mut mouse = Mouse::new();
     let mut time: u32 = 0;
-    let grid = Grid::generate(0);
-    let mut cells = vec![Cell::new(Vector2::new(0.0, 0.0))];
+    let mut grid = Grid::generate(0);
+
+    let mut cells = vec![Cell::new(Vector2::new(0.5, 0.5))];
+    grid.sectors[cells[0].idx_sector].count_of_cells += 1.0;
 
     let (vao_grid, texture_grid) = generate_tools_render_grid();
     let mut vao_cells = 0;
@@ -54,14 +58,7 @@ fn main() {
             std::ptr::null(),
             gl::DYNAMIC_DRAW,
         );
-        gl::VertexAttribPointer(
-            0,
-            3,
-            gl::FLOAT,
-            gl::FALSE,
-            0,
-            std::ptr::null(),
-        );
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 0, std::ptr::null());
         gl::EnableVertexAttribArray(0);
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
@@ -92,9 +89,32 @@ fn main() {
     // END SHADERS PROGRAMS;
 
     while !window.should_close() {
-        for i in 0..cells.len() {
-            cells[i].update(&grid);
+        let mut count_cells = cells.len();
+        let mut i = 0;
+        while i < count_cells {
+            let glob_gene = cells[i].update(&mut grid);
+            if let Some(gene) = glob_gene {
+                match gene {
+                    Gene::Reproduction => {
+                        let reprod = cells[i].reproduction();
+                        if let Some(cell) = reprod {
+                            grid.sectors[cell.idx_sector].count_of_cells += 1.0;
+                            cells.push(cell);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            if !cells[i].is_alive {
+                cells.remove(i);
+                count_cells -= 1;
+            } else {
+                i += 1;
+            }
         }
+
+        window.set_title(format!("evosector | count_cells: {}", cells.len()).as_str());
 
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
