@@ -71,14 +71,17 @@ impl Default for Genome {
     fn default() -> Self {
         let mut genome = Genome::new();
 
-        genome[0] = Some(Gene::Move(Vector2::new(0.4, 0.2)));
-        genome[4] = Some(Gene::Reproduction);
+        genome[0] = Some(Gene::Move(Vector2::new(0.23, 0.2)));
         genome[2] = Some(Gene::Move(Vector2::new(0.1, 0.4)));
         genome[3] = Some(Gene::Move(Vector2::new(-0.5, 0.1)));
         genome[4] = Some(Gene::Reproduction);
         genome[5] = Some(Gene::Move(Vector2::new(0.3, -0.3)));
         genome[6] = Some(Gene::Move(Vector2::new(0.4, 0.2)));
-        genome[4] = Some(Gene::Reproduction);
+        genome[9] = Some(Gene::Reproduction);
+        genome[10] = Some(Gene::Move(Vector2::new(0.4, 0.2)));
+        genome[14] = Some(Gene::Reproduction);
+        genome[18] = Some(Gene::Move(Vector2::new(0.4, 0.2)));
+        genome[22] = Some(Gene::Reproduction);
 
         genome
     }

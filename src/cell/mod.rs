@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::constants::{DEFAULT_ENERGY_CELL, SIZE_GRID, SIZE_RENDER_CELL};
 use crate::genome::gene::Gene;
 use crate::genome::Genome;
@@ -10,7 +8,7 @@ use nalgebra::Vector2;
 
 #[derive(Debug, Clone)]
 pub struct Cell {
-    energy: f32,
+    pub energy: f32,
     position: Vector2<f32>,
     genome: Genome,
     // color: Color,
@@ -36,6 +34,8 @@ impl Cell {
         if self.energy >= 60.0 {
             self.energy /= 2.0;
             self.lifetime = 0;
+
+            self.mutate();
 
             let mut new_cell = self.clone();
             new_cell.genome.step = 0;
@@ -97,31 +97,31 @@ impl Behavior for Cell {
         if let Some(gene) = self.genome[self.genome.step] {
             match gene {
                 Gene::Move(move_to) => {
-                    if limit_move(self.position, move_to) {
-                        self.energy -= move_to.len() as f32 / 2.0;
-                        self.position += move_to * (1.0 - sector.altitude);
-                        let new_idx_sector = get_index(self.position, SIZE_GRID.0);
+                    self.energy -= (move_to.len() as f32).powf(2.0);
+                    limit_move(&mut self.position, move_to * (1.0 - sector.altitude));
 
-                        if new_idx_sector != self.idx_sector {
-                            sector.count_of_cells -= 1.0;
+                    let new_idx_sector = get_index(self.position, SIZE_GRID.0);
 
-                            self.idx_sector = new_idx_sector;
-                            sector = &mut grid.sectors[self.idx_sector];
-                            sector.count_of_cells += 1.0;
-                        }
+                    if new_idx_sector != self.idx_sector {
+                        sector.count_of_cells -= 1.0;
+
+                        self.idx_sector = new_idx_sector;
+                        sector = &mut grid.sectors[self.idx_sector];
+                        sector.count_of_cells += 1.0;
                     }
                 }
 
+                Gene::Goto(step) => self.genome.step = step,
                 Gene::Reproduction => ret_gene = Some(Gene::Reproduction),
 
                 _ => {}
             }
         }
 
-        self.energy += 15.0 / (sector.count_of_cells * 2.0);
+        self.energy += 15.0 / (sector.count_of_cells * sector.count_of_cells * sector.count_of_cells);
         self.lifetime += 1;
 
-        if self.lifetime >= 72 {
+        if self.lifetime >= 72 || self.energy <= 30.0 {
             self.is_alive = false;
             sector.count_of_cells -= 1.0;
         }
@@ -137,11 +137,20 @@ impl Mutable for Cell {
     }
 }
 
-fn limit_move(move_from: Vector2<f32>, move_to: Vector2<f32>) -> bool {
-    let new_pos = move_from + move_to;
+fn limit_move(move_from: &mut Vector2<f32>, move_to: Vector2<f32>) {
+    let mut new_pos = *move_from + move_to;
 
-    new_pos.x >= 0.5
-        && new_pos.y >= 0.5
-        && new_pos.x <= (SIZE_GRID.0 as f32 - 0.5)
-        && new_pos.y <= (SIZE_GRID.1 as f32 - 0.5)
+    if new_pos.x < 0.5 {
+        new_pos.x = SIZE_GRID.0 as f32 - 0.5;
+    } else if new_pos.x > SIZE_GRID.0 as f32 - 0.5 {
+        new_pos.x = 0.5;
+    }
+
+    if new_pos.y < 0.5 {
+        new_pos.y = SIZE_GRID.1 as f32 - 0.5;
+    } else if new_pos.y > SIZE_GRID.1 as f32 - 0.5 {
+        new_pos.y = 0.5;
+    }
+
+    *move_from = new_pos;
 }

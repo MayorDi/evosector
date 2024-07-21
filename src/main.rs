@@ -1,4 +1,3 @@
-use std::collections::LinkedList;
 use std::mem::size_of;
 
 use evosector::camera::Camera;

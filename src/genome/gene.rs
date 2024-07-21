@@ -1,7 +1,7 @@
 use nalgebra::Vector2;
 use rand::Rng;
 
-use crate::traits::Mutable;
+use crate::{constants::COUNT_GENES, traits::Mutable};
 
 #[derive(Debug, Copy, Clone, PartialEq, variant_count::VariantCount)]
 pub enum Gene {
@@ -11,6 +11,7 @@ pub enum Gene {
     Move(Vector2<f32>),
     If(Condition),
     EndIf,
+    Goto(usize),
 }
 
 impl From<usize> for Gene {
@@ -19,7 +20,8 @@ impl From<usize> for Gene {
             0 => Gene::Reproduction,
             1 => Gene::Move(Vector2::default()),
             2 => Gene::If(Condition::default()),
-            _ => panic!("From<u8> for Gene => {}", value),
+            3 => Gene::EndIf,
+            _ => Gene::Goto(Default::default()),
         }
     }
 }
@@ -55,6 +57,9 @@ impl Mutable for Gene {
             Self::If(condition) => {
                 *condition =
                     Condition::from(rand::thread_rng().gen_range(0..Condition::VARIANT_COUNT));
+            }
+            Self::Goto(v) => {
+                *v = rand::thread_rng().gen_range(0..COUNT_GENES);
             }
             _ => {}
         }
