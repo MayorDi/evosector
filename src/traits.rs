@@ -1,13 +1,12 @@
-use std::{cell::RefCell, rc::Rc};
-
-use crate::cell::Cell;
+use crate::grid::Grid;
 
 pub trait Render {
     fn render(&self);
 }
 
 pub trait Behavior {
-    fn update(&mut self, index: usize, cells: Rc<RefCell<Vec<Cell>>>);
+    type GlobalImpact;
+    fn update(&mut self, grid: &Grid) -> Option<Self::GlobalImpact>;
 }
 
 pub trait Mutable {

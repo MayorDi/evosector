@@ -1,5 +1,6 @@
 use std::ops::{Index, IndexMut};
 
+use nalgebra::Vector2;
 use rand::Rng;
 
 use crate::constants::{COUNT_GENES, PROBABILITY_OF_MUTATION};
@@ -19,6 +20,14 @@ impl Genome {
         Self {
             genes: [None; COUNT_GENES],
             step: 0,
+        }
+    }
+
+    pub fn next_step(&mut self) {
+        if self.step + 1 >= self.genes.len() {
+            self.step = 0;
+        } else {
+            self.step += 1;
         }
     }
 }
@@ -60,7 +69,12 @@ impl Mutable for Genome {
 
 impl Default for Genome {
     fn default() -> Self {
-        let genome = Genome::new();
+        let mut genome = Genome::new();
+
+        genome[0] = Some(Gene::Move(Vector2::new(0.4, 0.0)));
+        genome[1] = Some(Gene::Move(Vector2::new(0.0, 0.2)));
+        genome[2] = Some(Gene::Move(Vector2::new(0.3, 0.0)));
+        genome[3] = Some(Gene::Move(Vector2::new(0.1, 0.1)));
 
         genome
     }

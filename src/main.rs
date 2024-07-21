@@ -6,6 +6,7 @@ use evosector::constants::SIZE_GRID;
 use evosector::grid::Grid;
 use evosector::mouse::Mouse;
 use evosector::opengl::prelude::*;
+use evosector::traits::Behavior;
 use evosector::traits::Render;
 use glfw::Action;
 use glfw::Context;
@@ -35,7 +36,7 @@ fn main() {
     let mut camera = Camera::new();
     let mut mouse = Mouse::new();
     let mut time: u32 = 0;
-    let _grid = Grid::generate(0);
+    let grid = Grid::generate(0);
     let mut cells = vec![Cell::new(Vector2::new(0.0, 0.0))];
 
     let (vao_grid, texture_grid) = generate_tools_render_grid();
@@ -91,6 +92,10 @@ fn main() {
     // END SHADERS PROGRAMS;
 
     while !window.should_close() {
+        for i in 0..cells.len() {
+            cells[i].update(&grid);
+        }
+
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
             match event {
@@ -184,6 +189,7 @@ fn main() {
     }
 
     program_grid.delete();
+    program_cells.delete();
 }
 
 fn generate_texture_for_grid() -> u32 {
@@ -224,7 +230,7 @@ fn generate_texture_for_grid() -> u32 {
 
 fn generate_tools_render_grid() -> (u32, u32) {
     let (mut vao_grid, mut texture_grid, mut vbo_grid, mut ebo_grid) = (0, 0, 0, 0);
-    let vert_data_grid = [
+    let vert_data_grid: [f32; 20] = [
         0.0,
         0.0,
         0.0,

@@ -45,7 +45,7 @@ impl Grid {
 
         for (index, sector) in grid.sectors.iter_mut().enumerate() {
             let pos = get_position(index, SIZE_GRID.0);
-            sector.altitude = noisemap.get_value(pos.x as usize, pos.y as usize);
+            sector.altitude = noisemap.get_value(pos.x as usize, pos.y as usize) as f32;
         }
 
         grid

@@ -5,7 +5,9 @@ use crate::traits::Mutable;
 
 #[derive(Debug, Copy, Clone, PartialEq, variant_count::VariantCount)]
 pub enum Gene {
+    /// Global impact
     Reproduction,
+    /// Local impact
     Move(Vector2<f32>),
     If(Condition),
     EndIf,
