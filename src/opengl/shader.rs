@@ -5,25 +5,20 @@ use gl::types::{GLchar, GLint};
 use super::prelude::{Build, Delete, GetId, Status};
 
 #[derive(Debug, Clone)]
-pub struct Shader<Src: BufRead> {
+pub struct Shader {
     id: u32,
     status: StatusShader,
-    src: Src,
+    src: Vec<u8>,
 }
 
-impl<Src: BufRead + Clone> Shader<Src> {
-    pub fn new(type_shader: gl::types::GLenum, src: Src) -> Self {
+impl Shader {
+    pub fn new(type_shader: gl::types::GLenum, src: Vec<u8>) -> Self {
         unsafe {
             let id = gl::CreateShader(type_shader);
-            let mut buf_reader = BufReader::new(src.clone());
-
-            let mut buf = vec![];
-            buf_reader.read_to_end(&mut buf).unwrap();
-
             gl::ShaderSource(
                 id,
                 1,
-                &std::ffi::CString::new(buf).unwrap().as_ptr(),
+                &std::ffi::CString::new(src.clone()).unwrap().as_ptr(),
                 std::ptr::null(),
             );
 
@@ -36,35 +31,23 @@ impl<Src: BufRead + Clone> Shader<Src> {
     }
 }
 
-impl<Src: BufRead> GetId for Shader<Src> {
+impl GetId for Shader {
     fn id(&self) -> u32 {
         self.id
     }
 }
 
-impl<Src: BufRead> Status for Shader<Src> {
+impl Status for Shader {
     type Output = StatusShader;
     fn status(&self) -> Self::Output {
         self.status.clone()
     }
 }
 
-impl<Src: BufRead> Read for Shader<Src> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        self.src.read(buf)
-    }
-
-    fn read_to_string(&mut self, buf: &mut String) -> std::io::Result<usize> {
-        self.src.read_to_string(buf)
-    }
-}
-
-impl<Src: BufRead> Build for Shader<Src> {
+impl Build for Shader {
     fn build(&mut self) -> Result<(), String> {
         unsafe {
             gl::CompileShader(self.id());
-            let mut buf = vec![];
-            self.read_to_end(&mut buf).unwrap();
 
             let mut status = gl::FALSE as GLint;
             gl::GetShaderiv(self.id(), gl::COMPILE_STATUS, &mut status);
@@ -100,7 +83,7 @@ impl<Src: BufRead> Build for Shader<Src> {
     }
 }
 
-impl<Src: BufRead> Delete for Shader<Src> {
+impl Delete for Shader {
     fn delete(self) {
         unsafe {
             gl::DeleteShader(self.id());

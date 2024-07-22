@@ -1,4 +1,7 @@
+use std::collections::HashMap;
 use std::mem::size_of;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 use evosector::camera::Camera;
 use evosector::cell::Cell;
@@ -12,6 +15,8 @@ use evosector::traits::Render;
 use glfw::Action;
 use glfw::Context;
 use glfw::Key;
+use glfw::PWindow;
+use glfw::WindowEvent;
 use nalgebra::Vector2;
 
 fn main() {
@@ -22,25 +27,41 @@ fn main() {
     ));
     glfw.window_hint(glfw::WindowHint::Resizable(true));
 
-    let (mut window, events) = glfw
+    let (window, events) = glfw
         .create_window(1200, 600, "evosector", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
-    gl::load_with(|s| window.get_proc_address(s));
-    window.set_framebuffer_size_callback(|_, w, h| unsafe {
-        gl::Viewport(0, 0, w, h);
-    });
+    let window = Arc::new(Mutex::new(window));
+    {
+        let window = window.clone();
+        let mut window = window.lock().unwrap();
+        gl::load_with(|s| window.get_proc_address(s));
+        window.set_framebuffer_size_callback(|_, w, h| unsafe {
+            gl::Viewport(0, 0, w, h);
+        });
 
-    window.make_current();
-    window.set_all_polling(true);
+        window.make_current();
+        window.set_all_polling(true);
+    }
 
-    let mut camera = Camera::new();
-    let mut mouse = Mouse::new();
+    let programs = Arc::new(Mutex::new(HashMap::new()));
+    let vao_vbo = Arc::new(Mutex::new(HashMap::new()));
+    let textures_ids = Arc::new(Mutex::new(HashMap::new()));
+
+    let camera = Arc::new(Mutex::new(Camera::new()));
+    let mouse = Arc::new(Mutex::new(Mouse::new()));
     let mut time: u32 = 0;
     let mut grid = Grid::generate(0);
 
-    let mut cells = vec![Cell::new(Vector2::new(0.5, 0.5))];
-    grid.sectors[cells[0].idx_sector].count_of_cells += 1.0;
+    let cells = Arc::new(Mutex::new(vec![Cell::new(Vector2::new(0.5, 0.5))]));
+    let grid = Arc::new(Mutex::new(grid));
+    {
+        let cells = cells.clone();
+        let cells = cells.lock().unwrap();
+        let grid = grid.clone();
+        let mut grid = grid.lock().unwrap();
+        grid.sectors[cells[0].idx_sector].count_of_cells += 1.0;
+    }
 
     let (vao_grid, texture_grid) = generate_tools_render_grid();
     let mut vao_cells = 0;
@@ -68,8 +89,8 @@ fn main() {
     let shader_v_grid = std::fs::read("./assets/shaders/grid.vert").unwrap();
     let shader_f_grid = std::fs::read("./assets/shaders/grid.frag").unwrap();
 
-    let vs_grid = Shader::new(gl::VERTEX_SHADER, &shader_v_grid[..]);
-    let fs_grid = Shader::new(gl::FRAGMENT_SHADER, &shader_f_grid[..]);
+    let vs_grid = Shader::new(gl::VERTEX_SHADER, shader_v_grid);
+    let fs_grid = Shader::new(gl::FRAGMENT_SHADER, shader_f_grid);
     let mut program_grid = Program::new();
     program_grid.push_shader(vs_grid);
     program_grid.push_shader(fs_grid);
@@ -79,44 +100,83 @@ fn main() {
     let shader_v_cells = std::fs::read("./assets/shaders/cell.vert").unwrap();
     let shader_f_cells = std::fs::read("./assets/shaders/cell.frag").unwrap();
 
-    let vs_cells = Shader::new(gl::VERTEX_SHADER, &shader_v_cells[..]);
-    let fs_cells = Shader::new(gl::FRAGMENT_SHADER, &shader_f_cells[..]);
+    let vs_cells = Shader::new(gl::VERTEX_SHADER, shader_v_cells);
+    let fs_cells = Shader::new(gl::FRAGMENT_SHADER, shader_f_cells);
     let mut program_cells = Program::new();
     program_cells.push_shader(vs_cells);
     program_cells.push_shader(fs_cells);
     program_cells.build().unwrap();
     // END SHADERS PROGRAMS;
 
-    while !window.should_close() {
-        let mut count_cells = cells.len();
-        let mut i = 0;
-        while i < count_cells {
-            let glob_gene = cells[i].update(&mut grid);
-            if let Some(gene) = glob_gene {
-                match gene {
-                    Gene::Reproduction => {
-                        let reprod = cells[i].reproduction();
-                        if let Some(cell) = reprod {
-                            grid.sectors[cell.idx_sector].count_of_cells += 1.0;
-                            cells.push(cell);
-                        }
-                    }
-                    _ => {}
-                }
-            }
+    // FOR RENDER:
+    {
+        let mut vao_vbo = vao_vbo.lock().unwrap();
+        let mut programs = programs.lock().unwrap();
+        let mut textures_ids = textures_ids.lock().unwrap();
+        vao_vbo.insert("vao_grid", vao_grid);
+        vao_vbo.insert("vao_cells", vao_cells);
+        vao_vbo.insert("vbo_cells", vbo_cells);
+        programs.insert("program_grid", program_grid);
+        programs.insert("program_cells", program_cells);
+        textures_ids.insert("texture_grid", texture_grid);
+    }
+    // ===
 
-            if !cells[i].is_alive {
-                cells.remove(i);
-                count_cells -= 1;
-            } else {
-                i += 1;
-            }
+    while !window_status(window.clone()) {
+        {
+            let arc_cells = cells.clone();
+            let cells = arc_cells.lock().unwrap();
+            let window = window.clone();
+            window
+                .lock()
+                .unwrap()
+                .set_title(format!("evosector | count_cells: {}", cells.len()).as_str());
         }
 
-        window.set_title(format!("evosector | count_cells: {}", cells.len()).as_str());
+        let update = {
+            let grid = grid.clone();
+            let cells = cells.clone();
+            std::thread::spawn(move || {
+                let mut grid = grid.lock().unwrap();
+                let mut count_cells = { cells.lock().unwrap().len() };
+                let mut i = 0;
+                while i < count_cells {
+                    let mut cells = cells.lock().unwrap();
+                    let glob_gene = cells[i].update(&mut grid);
+                    if let Some(gene) = glob_gene {
+                        match gene {
+                            Gene::Reproduction => {
+                                let reprod = cells[i].reproduction();
+                                if let Some(cell) = reprod {
+                                    grid.sectors[cell.idx_sector].count_of_cells += 1.0;
+                                    cells.push(cell);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    if !cells[i].is_alive {
+                        cells.remove(i);
+                        count_cells -= 1;
+                    } else {
+                        i += 1;
+                    }
+                }
+            })
+        };
 
         glfw.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
+            let camera = camera.clone();
+            let mut camera = camera.lock().unwrap();
+
+            let mouse = mouse.clone();
+            let mut mouse = mouse.lock().unwrap();
+
+            let window = window.clone();
+            let mut window = window.lock().unwrap();
+
             match event {
                 glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     window.set_should_close(true);
@@ -153,62 +213,105 @@ fn main() {
         }
 
         unsafe {
-            gl::ClearColor(0.2, 0.2, 0.2, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+            let window = window.clone();
+            let camera = camera.clone();
+            let time = Arc::new(time);
+            let programs = programs.clone();
+            let textures_ids = textures_ids.clone();
+            let vao_vbo = vao_vbo.clone();
+            let cells = cells.clone();
 
-            // REBDER GRID
-            gl::BindTexture(gl::TEXTURE_2D, texture_grid);
-
-            gl::UseProgram(program_grid.id());
-            gl::Uniform3f(
-                get_location(&program_grid, "resolution"),
-                window.get_size().0 as f32,
-                window.get_size().1 as f32,
-                0.0,
-            );
-            gl::Uniform2f(
-                get_location(&program_grid, "camera_pos"),
-                camera.position.x,
-                camera.position.y,
-            );
-            gl::Uniform1f(get_location(&program_grid, "camera_scale"), camera.scale);
-
-            gl::Uniform1ui(get_location(&program_grid, "Time"), time);
-            gl::BindVertexArray(vao_grid);
-            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
-            gl::BindVertexArray(0);
-
-            // RENDER CELLS
-            gl::UseProgram(program_cells.id());
-            gl::Uniform3f(
-                get_location(&program_cells, "resolution"),
-                window.get_size().0 as f32,
-                window.get_size().1 as f32,
-                0.0,
-            );
-            gl::Uniform2f(
-                get_location(&program_cells, "camera_pos"),
-                camera.position.x,
-                camera.position.y,
-            );
-            gl::Uniform1f(get_location(&program_grid, "camera_scale"), camera.scale);
-            gl::BindVertexArray(vao_cells);
-            gl::BindBuffer(gl::ARRAY_BUFFER, vbo_cells);
-            for cell in cells.iter() {
-                cell.render();
-            }
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-            gl::BindVertexArray(0);
-            gl::UseProgram(0);
+            render(window, camera, time, cells, programs, vao_vbo, textures_ids);
         }
 
-        window.swap_buffers();
         time += 1;
+
+        update.join().unwrap();
         std::thread::sleep(std::time::Duration::from_nanos(1_000_000_000 / 60));
     }
+}
 
-    program_grid.delete();
-    program_cells.delete();
+fn window_status(window: Arc<Mutex<PWindow>>) -> bool {
+    let window = window.lock().unwrap();
+    window.should_close()
+}
+
+unsafe fn render(
+    window: Arc<Mutex<PWindow>>,
+    camera: Arc<Mutex<Camera>>,
+    time: Arc<u32>,
+    cells: Arc<Mutex<Vec<Cell>>>,
+    programs: Arc<Mutex<HashMap<&str, Program<Shader>>>>,
+    vao_vbo: Arc<Mutex<HashMap<&str, u32>>>,
+    textures_ids: Arc<Mutex<HashMap<&str, u32>>>,
+) {
+    let mut window = window.lock().unwrap();
+    let texture_grid = textures_ids.lock().unwrap()["texture_grid"];
+    let programs = &programs.lock().unwrap();
+    let program_grid = &programs["program_grid"];
+    let program_cells = &programs["program_cells"];
+    let camera = camera.lock().unwrap();
+    let (vao_grid, vao_cells, vbo_cells) = {
+        let vao_vbo = vao_vbo.lock().unwrap();
+        (
+            vao_vbo["vao_grid"],
+            vao_vbo["vao_cells"],
+            vao_vbo["vbo_cells"],
+        )
+    };
+
+    gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+    // REBDER GRID
+    gl::BindTexture(gl::TEXTURE_2D, texture_grid);
+
+    gl::UseProgram(program_grid.id());
+    gl::Uniform3f(
+        get_location(program_grid, "resolution"),
+        window.get_size().0 as f32,
+        window.get_size().1 as f32,
+        0.0,
+    );
+    gl::Uniform2f(
+        get_location(program_grid, "camera_pos"),
+        camera.position.x,
+        camera.position.y,
+    );
+    gl::Uniform1f(get_location(program_grid, "camera_scale"), camera.scale);
+
+    gl::Uniform1ui(get_location(program_grid, "Time"), *time);
+    gl::BindVertexArray(vao_grid);
+    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, 0 as *const _);
+    gl::BindVertexArray(0);
+
+    // RENDER CELLS
+    gl::UseProgram(program_cells.id());
+    gl::Uniform3f(
+        get_location(program_cells, "resolution"),
+        window.get_size().0 as f32,
+        window.get_size().1 as f32,
+        0.0,
+    );
+    gl::Uniform2f(
+        get_location(program_cells, "camera_pos"),
+        camera.position.x,
+        camera.position.y,
+    );
+    gl::Uniform1f(get_location(program_cells, "camera_scale"), camera.scale);
+    gl::BindVertexArray(vao_cells);
+    gl::BindBuffer(gl::ARRAY_BUFFER, vbo_cells);
+    {
+        let cells = cells.lock().unwrap();
+        for cell in cells.iter() {
+            cell.render();
+        }
+    }
+    gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+    gl::BindVertexArray(0);
+    gl::UseProgram(0);
+
+    window.swap_buffers();
 }
 
 fn generate_texture_for_grid() -> u32 {

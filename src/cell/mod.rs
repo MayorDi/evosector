@@ -118,7 +118,7 @@ impl Behavior for Cell {
             }
         }
 
-        self.energy += 15.0 / (sector.count_of_cells * sector.count_of_cells * sector.count_of_cells);
+        self.energy += 30.0 / (sector.count_of_cells * sector.count_of_cells * sector.count_of_cells);
         self.lifetime += 1;
 
         if self.lifetime >= 72 || self.energy <= 30.0 {
